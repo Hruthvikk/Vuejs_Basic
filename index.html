@@ -1,0 +1,287 @@
+<!-- StAuth10222: I Hruthvik Chokshi, 000813765 certify that this material is my original work. No other person's work has been used without due acknowledgement. I have not made my work available to anyone else -->
+<!DOCTYPE html>
+<html>
+<head>
+    <link rel="stylesheet" href="./app.css">
+    <title>Grading System</title>
+    <script src="https://unpkg.com/vue@3"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.3.1/dist/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.14.7/dist/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.3.1/dist/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+    <style>
+        body{
+            background: rgb(189,21,51);
+            background: linear-gradient(59deg, rgba(189,21,51,0.27054149296437324) 0%, rgba(9,25,121,1) 25%, rgba(131,255,0,1) 100%);
+	        background-size: 400% 400%;
+            animation: gradient 15s ease infinite;
+            padding: 20px;
+            font-family: Arial, Helvetica, sans-serif;
+        }
+        #cbtn{
+            float: left;
+        }
+        #cbtn,#hbtn,#fbtn{margin: 20px;}
+        .orderupList-enter-active,.orderupList-leave-active{
+            transition: all 1s;
+        }
+        .orderupList-enter,.orderupList-leave-to{
+            opacity: 0;
+            transform: translateX(30px);
+        }
+        #sin{
+            color: aliceblue;
+            margin-left: 20px;
+        }
+        #errmess{
+            margin: 20px;
+            font:bold;
+            color: red;
+            font-size: larger;
+        }
+        
+        @keyframes gradient {
+            0% {
+                background-position: 0% 50%;
+            }
+            50% {
+                background-position: 100% 50%;
+            }
+            100% {
+                background-position: 0% 50%;
+            }
+        }
+      
+    </style>
+    
+</head>
+<body>
+    <div id="app">
+        <div id="alignbtn">
+            <button v-on:click="honorList" class="btn btn-success" id="hbtb">Honors</button>
+            &nbsp;&nbsp;&nbsp;
+            <button v-on:click="failList" class="btn btn-danger" id="fbtn">Fail</button>
+                
+                <button @click="dialogIsOpen = true" class="btn btn-primary" id="cbtn">Create</button>
+        </div>
+            <!-- ---------------------------------Create------------------------------------------------ -->
+            <dialog :open="dialogIsOpen" id="cg" class="dbox">
+            <h3>Add Course</h3>
+            <br>
+            <div class="input-field">
+                <label for="courseName">Course Name : </label>
+                <input placeholder="Enter Course Name" ref="courseName" v-model="input.courseName" id="courseName" type="text">
+              </div>
+            <br>
+              <div class="input-field">
+                <label for="grades">Grades: </label>
+                <input placeholder="Enter Grades" v-model="input.grades" id="grades" type="number" min="0" max="100">
+                <span id="errmess" v-html="rawHtml"></span>
+              </div>
+            
+              <br>
+                <button class="btn btn-success" @click="add">Add</button>
+                
+              <br><br>
+                <!-- <button @click="dialogIsOpen = false">Create</button> -->
+                <button class="btn btn-danger" @click="dialogIsOpen = false">Close</button>
+            </dialog>
+            <!-- ----------------------------------Edit------------------------------------------ -->
+            <dialog :open="editDialogIsOpen" id="eg" class="dbox">
+                <div class="input-field">
+                    <label for="courseName">Course Name: </label>
+                    <input placeholder="Enter Course Name" ref="courseName" v-model="editInput.courseName" id="courseName" type="text">
+                  </div>
+                    <br>
+                  <div class="input-field">
+                    <label for="grades">Grades: </label>
+                    <input placeholder="Enter Grades" v-model="editInput.grades" id="grades" type="number" min="0" max="100">
+                  </div>  
+                    <br>
+                    <div>
+                        <span id="errmess" v-html="rawHtml"></span>
+                    </div>
+                  
+                  <br>
+                  
+                  <br>
+                    <button @click="update">Edit</button>
+                  <br><br>
+                    <button @click="editDialogIsOpen = false">Close</button>
+                </dialog>
+                <!-- --------------------------------SEARCH COURSE----------------------------------- -->
+                <br><br>
+            <div class="filters row" id="searchc">
+                    <label for="search-element" id="sin">Course name:&nbsp</label><br><br>
+                    <input v-model="searchKey" class="search-input" requred/>
+                    <br><br>
+                  <!---------------------------------DISPLAY DATA IN TABLE------------------------------->
+            </div>
+            <br>
+            <table class="table table-dark">
+                <div v-if="gradesList.length">         
+                    <tr>
+                        <th scope="col">Id</th>
+                        <th scope="col">Course Name</th>
+                        <th scope="col">Grades</th>
+                        <th scope="col">Edit</th>
+                        <th scope="col">Delete</th>
+                    </tr>
+                    <tbody name="orderupList" is="transition-group">
+                    <tr v-for="(grade,index) in gradesList ">
+                        <td scope="row">{{index+1}}</td>
+                        <td>{{grade.courseName}}</td>
+                        <td>{{grade.grades}}</td>
+                        <td><button class="btn btn-secondary" @click="edit(index),editDialogIsOpen = true"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-pen" viewBox="0 0 16 16">
+                            <path d="m13.498.795.149-.149a1.207 1.207 0 1 1 1.707 1.708l-.149.148a1.5 1.5 0 0 1-.059 2.059L4.854 14.854a.5.5 0 0 1-.233.131l-4 1a.5.5 0 0 1-.606-.606l1-4a.5.5 0 0 1 .131-.232l9.642-9.642a.5.5 0 0 0-.642.056L6.854 4.854a.5.5 0 1 1-.708-.708L9.44.854A1.5 1.5 0 0 1 11.5.796a1.5 1.5 0 0 1 1.998-.001zm-.644.766a.5.5 0 0 0-.707 0L1.95 11.756l-.764 3.057 3.057-.764L14.44 3.854a.5.5 0 0 0 0-.708l-1.585-1.585z"/>
+                          </svg></button></td>
+                        <td><button class="btn btn-danger" v-on:click="deplete(index)"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-trash-fill" viewBox="0 0 16 16">
+                            <path d="M2.5 1a1 1 0 0 0-1 1v1a1 1 0 0 0 1 1H3v9a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2V4h.5a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1H10a1 1 0 0 0-1-1H7a1 1 0 0 0-1 1H2.5zm3 4a.5.5 0 0 1 .5.5v7a.5.5 0 0 1-1 0v-7a.5.5 0 0 1 .5-.5zM8 5a.5.5 0 0 1 .5.5v7a.5.5 0 0 1-1 0v-7A.5.5 0 0 1 8 5zm3 .5v7a.5.5 0 0 1-1 0v-7a.5.5 0 0 1 1 0z"/>
+                          </svg></button></td>   
+                        
+                    </tr>
+                    
+                </div>
+                <div v-else>
+                    <p id="errmess">No Course found under the name : {{searchKey}}</p>
+                </div>
+                    </tbody>
+            </table>
+    </div>
+    
+    
+    <script>
+        
+        const Events = 
+        { 
+            data() 
+            {
+                return ({
+                    grading: [{
+                        courseName: "Math",
+                        grades: 68,
+                      },
+                      {
+                        courseName: "Laravel",
+                        grades: 99,
+                      },
+                      {
+                        courseName: "Cyber Security",
+                        grades: 33,
+                      },
+                      {
+                        courseName: "VueJS",
+                        grades: 89,
+                      },
+                      {
+                        courseName: "Canadian History",
+                        grades: 77,
+                      },
+                      {
+                        courseName: "American History",
+                        grades: 48,
+                      }],
+                      input: {
+                        courseName: "",
+                        grades: "",
+                      },
+                    dialogIsOpen: false ,
+                    editDialogIsOpen: false,
+                    editInput: {
+                        courseName: "",
+                        grades: "",
+                      },
+                    searchKey: '',
+                    rawHtml: "",
+                    honorstate:false,
+                    failstate:false,
+                    temphonor:[],
+                    tempfail:[],
+                });
+            },
+                
+            methods: {
+                add: function()
+                {
+                    if(this.input.grades > 0 && this.input.grades <= 100){
+                        if(this.grading.find(coursesInArray => this.input.courseName === coursesInArray.courseName)){
+                            this.rawHtml = "This Course Name Already Exists"
+                        }else{
+                        this.grading.push({
+                        courseName:this.input.courseName,
+                        grades:this.input.grades
+                        });
+                    }
+                    }
+                    else{
+                        this.rawHtml = "Grades Should be between 0 and 100"
+                    }
+                },
+                edit: function(index) {
+                        this.editInput = this.grading[index];
+                        console.log(this.editInput);
+                        this.grading.splice(index, 1);
+                },
+                deplete: function(index) {
+                    this.grading.splice(index, 1);
+                  },   
+                update: function(){
+                if(this.editInput.grades > 0 && this.editInput.grades <= 100){    
+                    this.grading.push({
+                    courseName: this.editInput.courseName,
+                    grades: this.editInput.grades,
+                        })
+                }else{
+                    this.rawHtml = "Grades Should be between 0 and 100"
+                }
+                },
+                honorList()
+                {
+                    if(this.honorstate == false){
+                        this.honorstate = true;
+                        this.temphonor = this.grading
+                        return this.grading = this.grading.filter((grading)=>grading.grades>=80)
+                    }
+                    else if(this.honorstate == true){
+                        this.honorstate = false;
+                        return this.grading=this.temphonor
+                    }
+                },
+                failList(){
+                    if(this.failstate == false){
+                        this.failstate = true;
+                        this.tempfail = this.grading
+                        return this.grading = this.grading.filter((grading)=>grading.grades<50)
+                    }
+                    else if(this.failstate == true){
+                        this.failstate = false;
+                        return this.grading=this.tempfail
+                    }
+                }
+
+            },
+            computed: {
+                gradesList()
+                {
+                    if(this.searchKey.trim().length > 0)
+                    {
+                        return this.grading.filter((grading)=>grading.courseName.toLowerCase()
+                                            .includes(this.searchKey.trim().toLowerCase()))
+                    }
+                    else
+                    {
+                        return this.grading
+                    }
+                },
+            }
+        };
+        const app = Vue.createApp(Events);
+
+    
+
+    app.mount("#app");
+    </script>
+    
+</body>
+</html>
